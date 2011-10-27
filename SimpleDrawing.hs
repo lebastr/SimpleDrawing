@@ -13,7 +13,10 @@ module SimpleDrawing ( draw
                      , Rotate 
                      , rotate
                      , Scale
-                     , scale ) where
+                     , scale 
+                     , flush 
+                     , run1 
+                     , mainLoop ) where
 
 import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale)
 import qualified Graphics.UI.GLUT as GL
@@ -93,3 +96,13 @@ run io = do
     io
     flush
   mainLoop
+
+run1 :: IO () -> IO ()
+run1 io = do
+  getArgsAndInitialize
+  createWindow "App"
+  displayCallback $= do
+    clear [ColorBuffer]
+    currentColor $= Color4 0 0.3 1 1
+    io
+    flush

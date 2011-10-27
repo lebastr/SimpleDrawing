@@ -10,7 +10,7 @@ main = run $ draw $ scale xs 0.18 where
 
 g (x,y) = let x1 = x + y1
               y1 = y + k * sin x
-              k  = 1
+              k  = sqrt 2
           in (x1,y1)
              
 orb :: (a -> a) -> a -> [a]
