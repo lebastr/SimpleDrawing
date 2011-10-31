@@ -16,7 +16,8 @@ module SimpleDrawing ( draw
                      , scale 
                      , flush 
                      , run1 
-                     , mainLoop ) where
+                     , mainLoop 
+                     , GLGraphics ) where
 
 import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale)
 import qualified Graphics.UI.GLUT as GL
