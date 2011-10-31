@@ -30,20 +30,6 @@ process = run1 $ evalStateT program (Turtle { position = (0,0)
           
 type StateTurtle a = StateT (Turtle,[Turtle]) (IO) a
 
-getTurtle = fst `liftM` get
-putTurtle t = do
-  (_,s) <- get
-  put (t,s)
-  
-pop = do  
-  (x,s) <- get
-  case null s of
-    True  -> return ()
-    False -> put (head s, tail s) 
-
-push = do
-  (x,s) <- get
-  put (x,x:s)
 
 program :: StateTurtle ()
 program = do
@@ -71,6 +57,37 @@ program = do
     CStep s -> do
       putTurtle $ turtle { step = step turtle * s }
   program   
+  where
+    getTurtle = fst `liftM` get
+    putTurtle t = do
+      (_,s) <- get
+      put (t,s)
+  
+    pop = do  
+      (x,s) <- get
+      case null s of
+        True  -> return ()
+        False -> put (head s, tail s) 
+
+    push = do
+      (x,s) <- get
+      put (x,x:s)
+    
+tree1 = tree (30,0.8) (20,0.85)
+
+tree (a0,s0) (a1,s1) n | n == 0 = return ()
+                       | otherwise = do
+  forward
+  push
+  turn (-a0)
+  cstep s0
+  tree (a0,s0) (a1,s1) (n-1)
+  pop 
+  push
+  turn a1
+  cstep s1
+  tree (a0,s0) (a1,s1) (n-1)
+  pop
 
 main = do
   process
@@ -78,4 +95,9 @@ main = do
   
 send :: Cmd -> IO ()
 send = putMVar mvar
-       
+
+cstep s = send $ CStep s
+forward = send Forward
+turn a = send $ Turn a
+pop = send Pop
+push = send Push
