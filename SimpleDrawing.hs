@@ -17,10 +17,15 @@ module SimpleDrawing ( draw
                      , flush 
                      , run1 
                      , mainLoop 
-                     , GLGraphics ) where
+                     , GLGraphics 
+                     , clear ) where
 
-import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale)
+import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale, clear)
 import qualified Graphics.UI.GLUT as GL
+
+clear = do
+  GL.clear [GL.ColorBuffer]
+  flush
 
 {- 1. Посмотреть про полигоны и для чего нужен PolygonMode
 
@@ -92,7 +97,7 @@ run io = do
   getArgsAndInitialize
   createWindow "App"
   displayCallback $= do
-    clear [ColorBuffer]
+    GL.clear [ColorBuffer]
     currentColor $= Color4 0 0.3 1 1
     io
     flush
@@ -103,7 +108,7 @@ run1 io = do
   getArgsAndInitialize
   createWindow "App"
   displayCallback $= do
-    clear [ColorBuffer]
+    GL.clear [ColorBuffer]
     currentColor $= Color4 0 0.3 1 1
     io
     flush

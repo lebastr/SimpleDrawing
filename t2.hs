@@ -16,6 +16,8 @@ data Cmd = Forward
          | PenDown
          | Push
          | Pop
+         | Clean
+         | Reset
          deriving (Show)
 
 data Turtle = Turtle { position :: Point
@@ -23,10 +25,12 @@ data Turtle = Turtle { position :: Point
                      , angle    :: Angle
                      , pen      :: Bool } deriving (Show)
 
-process = run1 $ evalStateT program (Turtle { position = (0,0)
-                                            , angle    = 0 
-                                            , step     = 0.1
-                                            , pen      = True }, [])
+turtle0 = Turtle { position = (0,0)
+                 , angle    = 0
+                 , step     = 0.1
+                 , pen      = True }
+
+process = run1 $ evalStateT program (turtle0, [])
           
 type StateTurtle a = StateT (Turtle,[Turtle]) (IO) a
 
@@ -56,6 +60,8 @@ program = do
     Pop  -> pop
     CStep s -> do
       putTurtle $ turtle { step = step turtle * s }
+    Clean -> lift clear
+    Reset -> put $ (turtle0, [])
   program   
   where
     getTurtle = fst `liftM` get
@@ -74,6 +80,11 @@ program = do
       put (x,x:s)
     
 tree1 = tree (30,0.8) (20,0.85)
+
+example1 = replicateM_ 12 (p >> turn 30) where
+  p = replicateM_ 12 (forward >> turn 30)
+  
+example2 = cstep 2 >> tree1 12
 
 tree (a0,s0) (a1,s1) n | n == 0 = return ()
                        | otherwise = do
@@ -101,3 +112,5 @@ forward = send Forward
 turn a = send $ Turn a
 pop = send Pop
 push = send Push
+reset = send Reset
+clean = send Clean
