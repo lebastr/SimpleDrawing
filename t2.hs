@@ -6,9 +6,12 @@ import Control.Monad.State.Strict
 mvar :: MVar Cmd
 mvar = unsafePerformIO newEmptyMVar
 
+mvarIO :: MVar (IO ())
+mvarIO = unsafePerformIO newEmptyMVar
+
 type Distance = Double
 type Angle    = Double
-
+type MyColor  = (GLfloat, GLfloat, GLfloat)
 data Cmd = Forward
          | Turn Angle
          | CStep Double
@@ -16,6 +19,7 @@ data Cmd = Forward
          | PenDown
          | Push
          | Pop
+         | DipPen MyColor
          | Clean
          | Reset
          deriving (Show)
@@ -23,17 +27,18 @@ data Cmd = Forward
 data Turtle = Turtle { position :: Point
                      , step     :: Distance
                      , angle    :: Angle
-                     , pen      :: Bool } deriving (Show)
+                     , pen      :: Bool 
+                     , color    :: MyColor } deriving (Show)
 
 turtle0 = Turtle { position = (0,0)
                  , angle    = 0
                  , step     = 0.1
-                 , pen      = True }
+                 , pen      = True 
+                 , color    = (1,1,1)}
 
-process = run1 $ evalStateT program (turtle0, [])
+process = evalStateT program (turtle0, [])
           
 type StateTurtle a = StateT (Turtle,[Turtle]) (IO) a
-
 
 program :: StateTurtle ()
 program = do
@@ -42,25 +47,28 @@ program = do
   case cmd of
     PenUp -> putTurtle (turtle { pen = False })
     PenDown -> putTurtle (turtle { pen = True })
+    DipPen (r,g,b) -> putTurtle (turtle {color = (r,g,b)})
     Forward -> do
       let (x0,y0) = position turtle
           a = angle turtle
           d = step turtle
+          (r,g,b) = color turtle
           (dx,dy) = fromPolar2D (d,a)
           (x1,y1) = (x0 + dx, y0 + dy)
           turtle' = turtle { position = (x1,y1) }
       putTurtle turtle'
       case pen turtle of
-        True -> do
-          lift $ draw $ Line (x0,y0) (x1,y1)
-          lift $ flush
+        True -> lift $ putMVar mvarIO $ do
+          currentColor $= Color4 r g b 0
+          draw $ Line (x0,y0) (x1,y1)
+          flush
         False -> return ()
     Turn a -> putTurtle $ turtle { angle = angle turtle + (pi*a/180) }
     Push -> push
     Pop  -> pop
     CStep s -> do
       putTurtle $ turtle { step = step turtle * s }
-    Clean -> lift clear
+    Clean -> lift $ putMVar mvarIO clear
     Reset -> put $ (turtle0, [])
   program   
   where
@@ -101,7 +109,8 @@ tree (a0,s0) (a1,s1) n | n == 0 = return ()
   pop
 
 main = do
-  process
+  run2 mvarIO
+  forkIO process
   forkIO mainLoop
   
 send :: Cmd -> IO ()
@@ -109,8 +118,21 @@ send = putMVar mvar
 
 cstep s = send $ CStep s
 forward = send Forward
-turn a = send $ Turn a
-pop = send Pop
-push = send Push
-reset = send Reset
-clean = send Clean
+turn a  = send $ Turn a
+pop     = send Pop
+push    = send Push
+reset   = send Reset
+clean   = send Clean
+repl n  = replicateM_ n
+penup   = send PenUp
+pendown = send PenDown
+dippen  = send . DipPen
+
+example3 = mapM_ (\c -> h c fig) $ concat (repeat cs)
+  where
+    fig = cstep 0.2 >> replicateM_ 5 (replicateM_ 6 (forward >> turn 60) >> turn 72)
+    h c fig = penup >> dippen c >> push >> pendown >> fig >> pop >> forward >> turn 16 >> cstep 0.99
+    cs = zipWith (\a b -> (a,b,0)) xs' ys'
+    xs' = xs ++ replicate 10 1.0
+    ys' = replicate 10 1.0 ++ reverse xs
+    xs  = [0,0.1..1.0]

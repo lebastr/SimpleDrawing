@@ -16,12 +16,17 @@ module SimpleDrawing ( draw
                      , scale 
                      , flush 
                      , run1 
+                     , run2
                      , mainLoop 
                      , GLGraphics 
-                     , clear ) where
+                     , clear 
+                     , currentColor
+                     , ($=)
+                     , Color4 (..)) where
 
 import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale, clear)
 import qualified Graphics.UI.GLUT as GL
+import Control.Concurrent
 
 clear = do
   GL.clear [GL.ColorBuffer]
@@ -112,3 +117,26 @@ run1 io = do
     currentColor $= Color4 0 0.3 1 1
     io
     flush
+
+run2 :: MVar (IO ()) -> IO ()
+run2 mvar = do
+  getArgsAndInitialize
+  createWindow "App"
+  -- GL.clear [ColorBuffer]
+  -- currentColor $= Color4 0 0.3 1 1
+  -- flush
+  idleCallback $= Just m
+  displayCallback $= do
+    GL.clear [ColorBuffer]
+    currentColor $= Color4 0 0.3 1 1
+    flush
+    -- print "DisplayCallback"
+--  mainLoop
+--  keyboardMouseCallback $= Just (\_ _ _ _ -> print "Click")
+  where
+    m1 = takeMVar mvar >>= id
+    m = do
+      v <- tryTakeMVar mvar
+      case v of
+        Just io -> io
+        Nothing -> return ()
