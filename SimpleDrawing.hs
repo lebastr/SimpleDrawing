@@ -22,7 +22,9 @@ module SimpleDrawing ( draw
                      , clear 
                      , currentColor
                      , ($=)
-                     , Color4 (..)) where
+                     , Color4 (..)
+                     , Radius 
+                     , Angle ) where
 
 import Graphics.UI.GLUT hiding (Point, Polygon, Line, Triangle, rotate, scale, clear)
 import qualified Graphics.UI.GLUT as GL

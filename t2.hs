@@ -1,3 +1,5 @@
+module Main where
+
 import SimpleDrawing
 import Control.Concurrent
 import qualified Turtle as T

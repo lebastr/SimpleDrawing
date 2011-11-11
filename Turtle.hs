@@ -31,8 +31,8 @@ mvar = unsafePerformIO newEmptyMVar
 mvarIO :: MVar (IO ())
 mvarIO = unsafePerformIO newEmptyMVar
 
-type Distance = Double
-type Angle    = Double
+type Distance = Radius
+-- type Angle    = Double
 type MyColor  = (GLfloat, GLfloat, GLfloat)
 
 data Turtle = Turtle { position :: Point
