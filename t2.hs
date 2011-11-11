@@ -10,6 +10,11 @@ tree1 n = T.send $ tree (30,0.8) (20,0.85) n
 
 tree a b n = evalStateT (treeCS a b n) colors
 
+monoColorTree n = (T.color `liftM` T.getTurtle) 
+                  >>= evalStateT (treeCS (30, 0.8) (20, 0.85) n) . repeat
+
+tree2 = T.send . monoColorTree
+
 example1 = replicateM_ 12 (p >> turn 30) where
   p = replicateM_ 12 (forward >> turn 30)
   
@@ -66,3 +71,26 @@ example3 = mapM_ (\c -> h c fig) colors
   where
     fig = cstep 0.2 >> replicateM_ 5 (replicateM_ 6 (forward >> turn 60) >> turn 72)
     h c fig = penup >> dippen c >> push >> pendown >> fig >> pop >> forward >> turn 16 >> cstep 0.99
+
+--fun :: Double -> Double
+fun s | s >= 0 && s < 1/6 = 1.0
+      | s >= 1/6 && s < 1/3 = 2 - 6*s
+      | s >= 1/3 && s < 2/3 = 0.0
+      | s >= 2/3 && s < 5/6 = 6*s - 4
+      | s >= 5/6 && s < 1 = 1.0
+      | otherwise = fun s' where s' = s - (fromIntegral $ floor s)
+
+color :: GLfloat -> T.MyColor
+color angle = let s = angle / 360
+                  r = fun s
+                  g = fun (s - 1/3)
+                  b = fun (s - 2/3)
+              in (r,g,b)
+
+example4 = do
+  clean >> reset >> T.send (T.setpos (-0.2,-0.8)) >> cstep 2.7
+  sequence_ $ zipWith sp (cycle [cstep 0.3 >> turn (-90) >> tree2 8]) cs
+  where
+    sp p c = penup >> push >> pendown >> dippen c >> p >> pop >> forward >> turn 16 >> cstep 0.99
+    cs = concat $ repeat $ map color (s ++ reverse s)
+    s = [-180, -170..(-120)]
