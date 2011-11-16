@@ -67,7 +67,9 @@ colors = concat $ repeat cs
     ys' = replicate 10 1.0 ++ reverse xs
     xs  = [0,0.1..1.0]
 
-example3 = mapM_ (\c -> h c fig) colors
+example3 = T.send (T.setpos (-0.2,-0.9)) 
+           >> cstep 2.5 
+           >> mapM_ (\c -> h c fig) colors
   where
     fig = cstep 0.2 >> replicateM_ 5 (replicateM_ 6 (forward >> turn 60) >> turn 72)
     h c fig = penup >> dippen c >> push >> pendown >> fig >> pop >> forward >> turn 16 >> cstep 0.99
