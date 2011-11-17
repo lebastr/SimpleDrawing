@@ -103,3 +103,7 @@ example5 = cstep 0.04 >> (h1.h1'.a.a.a.a) forward
     h1' x = mapM_ (\c -> dippen c >> x >> turn 30) $ 
             take 12 [color x | x <- [0, 30..360]]
     a x = x >> turn 60 >> x >> turn (-120) >> x >> turn 60 >> x
+
+example6 = cstep 0.02 >> (a.a.a.a.a.a.a.a) forward
+  where
+    a x = x >> turn 60 >> x >> turn (-120) >> x >> turn 60 >> x >> turn 2
